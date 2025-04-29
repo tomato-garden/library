@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" href="admin.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery 추가 -->
+</head>
+<body>
+    <aside class="sidebar">
+        <img src="./img/logo.png" alt="사이트 로고" class="logo" id="logo">
+        <button>업로드</button>
+        <button>공지사항</button>
+        <button>사용자 관리</button>
+        <button>리뷰 현황</button>
+    </aside>
+    <div class="main-content">
+        <h2>도서 업로드</h2>
+        <div class="upload-container">
+            <input class="upload-box image-url-box" type="text" id="image_url" placeholder="책 표지 이미지 경로">
+            <input class="upload-box title-box" type="text" id="title" placeholder="책 제목">
+            <input class="upload-box author-box" type="text" id="author" placeholder="저자">
+            <input class="upload-box publisher-box" type="text" id="publisher" placeholder="출판사">
+            <textarea class="upload-box summary-box" id="summary" placeholder="줄거리 입력"></textarea>
+            <input class="upload-box" type="file" id="txt_file" name="txt_file" accept=".txt"> <!-- 텍스트 파일로 변경 -->
+            <button class="register-button" onclick="registerBook()">등록하기</button>
+        </div>
+
+        <h2>공지사항 업로드</h2>
+        <div class="notice-container">
+            <input class="upload-box" type="text" id="notice_title" placeholder="공지사항 제목">
+            <textarea class="notice-box" id="notice_content" placeholder="공지사항 내용"></textarea>
+            <input class="upload-box" type="text" id="notice_author" placeholder="작성자">
+            <button class="notice-register-button" onclick="registerNotice()">등록하기</button>
+        </div>
+
+    </div>
+    
+    <script>
+        document.getElementById("logo").addEventListener("click", function () {
+            window.location.href = "main.php"; // 메인 페이지 URL로 변경
+        });
+
+        function registerBook() {
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const publisher = document.getElementById('publisher').value;
+            const summary = document.getElementById('summary').value;
+            const image_url = document.getElementById('image_url').value;
+
+            if (!title || !author || !publisher || !summary || !image_url) {
+                alert("모든 필드를 작성해주세요.");
+                return;
+            }
+
+            // 텍스트 파일이 선택되었는지 확인
+            const fileInput = document.getElementById('txt_file');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("텍스트 파일을 선택해주세요.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('author', author);
+            formData.append('publisher', publisher);
+            formData.append('image_url', image_url);
+            formData.append('summary', summary);
+            formData.append('txt_file', file); // 텍스트 파일 추가
+
+            // AJAX 요청으로 데이터 전송
+            $.ajax({
+                url: 'register_book.php', // PHP 파일 경로
+                type: 'POST',
+                data: formData,
+                contentType: false, // 반드시 false로 설정
+                processData: false, // 반드시 false로 설정
+                success: function(response) {
+                    alert(response); // 서버에서의 응답을 알림으로 표시
+                },
+                error: function() {
+                    alert("서버와의 연결에 문제가 발생했습니다.");
+                }
+            });
+        }
+
+        function confirmRegistration(type) {
+            const confirmation = confirm("정말 등록하시겠습니까?");
+            if (confirmation) {
+                alert("등록이 완료되었습니다.");
+            } else {
+                alert("등록이 취소되었습니다.");
+            }
+        }
+
+        function registerNotice() {
+            const title = document.getElementById('notice_title').value;
+            const content = document.getElementById('notice_content').value;
+            const author = document.getElementById('notice_author').value;
+
+            if (!title || !content || !author) {
+                alert("모든 필드를 작성해주세요.");
+                return;
+            }
+
+            // AJAX 요청으로 데이터 전송
+            $.ajax({
+                url: 'upload_notice.php', // PHP 파일 경로
+                type: 'POST',
+                data: {
+                    title: title,
+                    content: content,
+                    author: author
+                },
+                success: function(response) {
+                    alert(response); // 서버에서의 응답을 알림으로 표시
+                },
+                error: function() {
+                    alert("서버와의 연결에 문제가 발생했습니다.");
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>책 뷰어</title>
+    <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+    <div class="header">
+        <h3>끄투 용사</h3>
+        <h5>by 외 않되요?</h5>
+    </div>
+    <button class="close-button" onclick="goToDetailPage()">X</button>
+
+    <div class="book-container" id="bookContent"></div>
+
+    <div class="nav-buttons">
+        <button onclick="prevPage()">&#x3C;</button>
+        <span class="page-indicator" id="pageIndicator">1/1</span>
+        <button onclick="nextPage()">&#x3E;</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        const bookContent = document.getElementById("bookContent");
+        const pageIndicator = document.getElementById("pageIndicator");
+
+        // 본문 내용 (줄바꿈 유지)
+        const fullText = ` 
+        어느 날, 작은 마을에 한 소년이 있었습니다.  
+        그의 이름은 알렉스였습니다.  
+        알렉스는 모험을 꿈꾸었습니다.  
+        
+        그리고 어느 날, 마법의 지도를 발견했습니다.  
+
+        지도에는 신비로운 장소가 표시되어 있었습니다.  
+        그곳에는 전설 속 보물이 숨겨져 있다고 했습니다.  
+        알렉스는 고민에 빠졌습니다.  
+        과연 그는 이 모험을 떠나야 할까요?  
+
+        결국, 알렉스는 결심했습니다.  
+        마을을 떠나 모험을 시작하기로 했습니다.  
+        첫 번째 목적지는 '어둠의 숲'이었습니다.  
+        그곳에는 무시무시한 괴물이 있다고 했습니다.  
+
+        어느 날, 작은 마을에 한 소년이 있었습니다.  
+        그의 이름은 알렉스였습니다.  
+        알렉스는 모험을 꿈꾸었습니다.  
+        
+        그리고 어느 날, 마법의 지도를 발견했습니다.  
+
+        지도에는 신비로운 장소가 표시되어 있었습니다.  
+        그곳에는 전설 속 보물이 숨겨져 있다고 했습니다.  
+        알렉스는 고민에 빠졌습니다.  
+        과연 그는 이 모험을 떠나야 할까요?  
+
+        결국, 알렉스는 결심했습니다.  
+        마을을 떠나 모험을 시작하기로 했습니다.  
+        첫 번째 목적지는 '어둠의 숲'이었습니다.  
+        그곳에는 무시무시한 괴물이 있다고 했습니다.  
+        
+        `.trim();
+
+        let pages = [];
+        let tempPage = "";
+        const textLines = fullText.split("\n");
+
+        for (let i = 0; i < textLines.length; i++) {
+            let testText = tempPage ? tempPage + "\n" + textLines[i] : textLines[i];
+            bookContent.textContent = testText;
+
+            if (bookContent.scrollHeight > bookContent.clientHeight) {
+                pages.push(tempPage.trim());
+                tempPage = textLines[i];
+            } else {
+                tempPage = testText;
+            }
+        }
+        if (tempPage.trim() !== "") pages.push(tempPage.trim());
+        totalPages = pages.length;
+
+        function updatePage() {
+            bookContent.textContent = pages[currentPage - 1];
+            pageIndicator.textContent = `${currentPage}/${totalPages}`;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePage();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePage();
+            } else {
+                showRatingPopup();
+            }
+        }
+
+        function showRatingPopup() {
+            const popup = document.createElement("div");
+            popup.classList.add("rating-popup");
+
+            popup.innerHTML = `
+                <div class="popup-content">
+                    <h2>별점을 남겨주세요!</h2>
+                    <div class="stars">
+                        <span class="star" data-value="1">⭐</span>
+                        <span class="star" data-value="2">⭐</span>
+                        <span class="star" data-value="3">⭐</span>
+                        <span class="star" data-value="4">⭐</span>
+                        <span class="star" data-value="5">⭐</span>
+                    </div>
+                    <button id="cancelRating">취소</button>
+                    <button id="confirmRating">확인</button>
+                </div>
+            `;
+
+            document.body.appendChild(popup);
+
+            const stars = popup.querySelectorAll(".star");
+            let selectedRating = 0;
+
+            stars.forEach(star => {
+                star.addEventListener("click", () => {
+                    selectedRating = parseInt(star.getAttribute("data-value"));
+                    stars.forEach(s => {
+                        s.textContent = s.getAttribute("data-value") <= selectedRating ? "🌟" : "⭐";
+                    });
+                });
+            });
+
+            document.getElementById("confirmRating").addEventListener("click", () => {
+                if (selectedRating > 0) {
+                    alert(`감사합니다! 별점: ${selectedRating}`);
+                } else {
+                    alert("별점을 선택해주세요!");
+                }
+                goToDetailPage();
+            });
+
+            document.getElementById("cancelRating").addEventListener("click", () => {
+                popup.remove();
+            });
+        }
+
+        function goToDetailPage() {
+            window.location.href = "detail.html";
+        }
+
+        document.addEventListener("DOMContentLoaded", updatePage);
+    </script>
+</body>
+</html>

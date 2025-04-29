@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관심 도서 페이지</title>
+    <link rel="stylesheet" href="interest.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const booksPerPage = 5;
+            let currentPage = 1;
+            let bookData = [];
+    
+            document.querySelector(".logo").addEventListener("click", function () {
+                window.location.href = "main.php";
+            });
+    
+            document.querySelector(".mypage").addEventListener("click", function () {
+                window.location.href = "mypage.php";
+            });
+    
+            function fetchInterestBooks() {
+                fetch("get_interest.php")
+                    .then(response => response.json())
+                    .then(data => {
+                        bookData = data;
+                        currentPage = 1; // 데이터를 새로 불러오면 첫 페이지로 초기화
+                        renderBooks(currentPage);
+                        renderPagination(); // 페이지네이션도 업데이트
+                    })
+                    .catch(error => console.error("데이터 가져오기 오류:", error));
+            }
+    
+            function renderPagination() {
+            const paginationContainer = document.querySelector(".table-container .pagination");
+            paginationContainer.innerHTML = "";
+            const totalPages = Math.ceil(bookData.length / booksPerPage);
+
+            if (totalPages <= 1) return; // 1페이지밖에 없으면 숨김
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement("span");
+                pageBtn.innerText = i;
+                pageBtn.classList.add("page-btn");
+                if (i === currentPage) pageBtn.classList.add("active");
+
+                pageBtn.addEventListener("click", function () {
+                    currentPage = i;
+                    renderBooks(currentPage);
+                });
+
+                paginationContainer.appendChild(pageBtn);
+
+                if (i < totalPages) {
+                    const separator = document.createElement("span");
+                    separator.innerText = " | ";
+                    paginationContainer.appendChild(separator);
+                }
+            }
+        }
+
+    
+            function renderBooks(page) {
+                const tbody = document.querySelector(".table-container tbody");
+                tbody.innerHTML = "";
+    
+                const start = (page - 1) * booksPerPage;
+                const end = start + booksPerPage;
+                bookData.slice(start, end).forEach(book => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${book.title}</td>
+                        <td>${book.author} / ${book.publisher}</td>
+                        <td><button class="remove-btn" data-book-id="${book.id}">❌</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+    
+                renderPagination(); // 페이지네이션 갱신
+            }
+    
+            document.querySelector(".table-container").addEventListener("click", function (event) {
+                if (event.target && event.target.classList.contains("remove-btn")) {
+                    let bookId = event.target.dataset.bookId;
+    
+                    if (!confirm("관심을 취소하시겠습니까?")) return;
+    
+                    fetch("toggle_interest.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "book_id=" + bookId
+                    })
+                    .then(response => response.text())
+                    .then(status => {
+                        if (status.trim() === "deleted") {
+                            bookData = bookData.filter(book => book.id !== parseInt(bookId));
+                            if ((currentPage - 1) * booksPerPage >= bookData.length) {
+                                currentPage = Math.max(1, currentPage - 1); // 현재 페이지에 데이터가 없으면 이전 페이지로 이동
+                            }
+                            renderBooks(currentPage);
+                        } else {
+                            alert("삭제 실패");
+                        }
+                    })
+                    .catch(error => console.error("요청 실패:", error));
+                }
+            });
+    
+            fetchInterestBooks();
+        });
+    </script>
+    <div class="pagination"></div>
+    
+        
+        
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="./img/logo.png" alt="사이트 로고" class="logo">
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="검색...">
+                <button class="search-button">검색</button>
+            </div>
+            <img src="./img/mypage.jpg" alt="마이페이지" class="mypage">
+        </div>
+        <div class="menu">
+            <a href="Libraryloan.html">내서재</a>
+            <a href="notice.html">공지사항</a>
+        </div>
+        <h2>관심 도서 목록</h2>
+        <div class="main-content">
+            <aside class="aside">
+                <button onclick="window.location.href='Libraryloan.html'">대출 도서</button>
+                <button onclick="window.location.href='return.html'">반납 도서</button>
+                <button onclick="window.location.href='interest.html'">관심 도서</button>
+            </aside>
+            <div class="content">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>도서 제목</th>
+                                <th>저자 / 출판사</th>
+                                <th>관심 상태</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody> <!-- 동적 데이터 삽입 -->
+                    </table>
+                    <!-- 🔥 페이지네이션을 표 바로 아래로 이동 -->
+                    <div class="pagination"></div>  
+                </div>                                
+                <div class="ad-section">
+                    <img src=".\img\ad1.jpg" alt="광고 이미지" class="ad-image">
+                </div>
+        </div>
+    </div>
+</body>
+</html>

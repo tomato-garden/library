@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도서 반납 페이지</title>
+    <link rel="stylesheet" href="return.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const booksPerPage = 5; // 한 페이지당 표시할 도서 개수
+            let currentPage = 1;
+            let bookData = []; // 서버에서 받아올 반납 도서 데이터
+            const tableContainer = document.querySelector(".table-container table");
+        
+            // 마이페이지 클릭 시 마이페이지로 이동
+            document.querySelector(".mypage").addEventListener("click", function () {
+                    window.location.href = "mypage.php"; // 마이페이지 링크 추가 예정
+                });
+
+            // 1. 로고 클릭 시 메인 페이지로 이동
+            document.querySelector(".logo").addEventListener("click", function () {
+                    window.location.href = "main.php";
+                });
+        
+            // ✅ 서버에서 반납 도서 목록 가져오기
+            function fetchBooks() {
+                fetch("get_returns.php")
+                    .then(response => response.json())
+                    .then(data => {
+                        bookData = data;
+                        renderBooks(currentPage);
+                    })
+                    .catch(error => console.error("데이터 로드 실패:", error));
+            }
+        
+            // ✅ 도서 목록 출력
+            function renderBooks(page) {
+                const tbody = tableContainer.querySelector("tbody") || document.createElement("tbody");
+                tbody.innerHTML = "";
+                const start = (page - 1) * booksPerPage;
+                const end = start + booksPerPage;
+                
+                bookData.slice(start, end).forEach(book => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${book.title}</td>
+                        <td>${book.author} / ${book.publisher}</td>
+                        <td>${book.return_date}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+        
+                if (!tableContainer.querySelector("tbody")) {
+                    tableContainer.appendChild(tbody);
+                }
+        
+                renderPagination();
+            }
+        
+            // ✅ 페이지네이션 구현
+            function renderPagination() {
+                let paginationContainer = document.querySelector(".pagination");
+                if (!paginationContainer) {
+                    paginationContainer = document.createElement("div");
+                    paginationContainer.classList.add("pagination");
+                    paginationContainer.style.marginTop = "20px";
+                    tableContainer.parentNode.appendChild(paginationContainer);
+                }
+                paginationContainer.innerHTML = "";
+                paginationContainer.style.textAlign = "center";
+        
+                const totalPages = Math.ceil(bookData.length / booksPerPage);
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement("span");
+                    pageBtn.innerText = i;
+                    pageBtn.classList.add("page-btn");
+                    pageBtn.style.cursor = "pointer";
+                    if (i === currentPage) pageBtn.classList.add("active");
+                    pageBtn.addEventListener("click", function () {
+                        currentPage = i;
+                        renderBooks(currentPage);
+                    });
+                    paginationContainer.appendChild(pageBtn);
+        
+                    if (i < totalPages) {
+                        const separator = document.createElement("span");
+                        separator.innerText = " | ";
+                        paginationContainer.appendChild(separator);
+                    }
+                }
+            }
+        
+            // ✅ 초기 데이터 로드
+            fetchBooks();
+        });
+        
+        </script>
+        
+        
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="./img/logo.png" alt="사이트 로고" class="logo">
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="검색...">
+                <button class="search-button">검색</button>
+            </div>
+            <img src="./img/mypage.jpg" alt="마이페이지" class="mypage">
+        </div>
+        <div class="menu">
+            <a href="Libraryloan.html">내서재</a>
+            <a href="notice.html">공지사항</a>
+        </div>
+        <h2>반납 도서 목록</h2>
+        <div class="main-content">
+            <aside class="aside">
+                <button onclick="window.location.href='Libraryloan.html'">대출 도서</button>
+                <button onclick="window.location.href='return.html'">반납 도서</button>
+                <button onclick="window.location.href='interest.html'">관심 도서</button>
+            </aside>
+            <div class="content">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>도서 제목</th>
+                                <th>저자 / 출판사</th>
+                                <th>반납 날짜</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody> <!-- 동적 데이터 삽입 -->
+                    </table>
+                </div>                
+                <div class="ad-section">
+                    <img src=".\img\ad1.jpg" alt="광고 이미지" class="ad-image">
+                </div>
+        </div>
+    </div>
+</body>
+</html>
